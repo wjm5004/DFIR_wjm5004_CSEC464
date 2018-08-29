@@ -1,2 +1,4 @@
 # DFIR_wjm5004_CSEC464
-Computer System Forensics
+William McDonnell
+RIT Computer Security
+CSEC 464 Computer System Forensics
