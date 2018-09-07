@@ -154,10 +154,13 @@ scheduled_tasks () {
 
 network () {
 	local output=$header
-	#arp_table=$(arp -e)
-	#output+=$'Arp table\n'
-	#output+=$arp_table
-	#output+=$'\n'
+	arp_table=$(arp -e)
+	output+=$'Arp table\n'
+	output+=$arp_table
+	output+=$'\n'
+	csv_output+=$'arp_table\n'
+	csv_output+=$arp_table
+	csv_output+=$'\n'
 	output+=$'Interfaces\n'
 	csv_output+=$'\ninterface, address\n'
 	for interface in $(ls /sys/class/net/); do
