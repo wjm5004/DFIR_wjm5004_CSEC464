@@ -6,10 +6,7 @@
 # -c will output results to output.csv
 # specifying an email will send the csv output to the destination
 
-file='output.bash.txt'
 script=$(realpath $0)
-rm $file
-touch $file
 csv_output=""
 exec 2> /dev/null
 header=$'------------------------------------------\n'
@@ -23,7 +20,7 @@ time_write () {
 	output+="$curr_time, $timezone, $uptime_since"
 	output+=$'\n'
 	output+=$header
-	echo "$output" > $file
+	echo "$output"
 
 	csv_output+=$'time, timezone, up since\n'
 	csv_output+=$curr_time,$timezone,$uptime_since$'\n'
@@ -38,7 +35,7 @@ version_info () {
 	output+="$major_minor, $typical_name, $kernel_version"
 	output+=$'\n'
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 
 	csv_output+=$'\nOS version, name, kernel_version\n'
 	csv_output+=$major_minor,$typical_name,$kernel_version$'\n'
@@ -70,7 +67,7 @@ hardware_info () {
 	done
 	output+=$header
 	output+=$'\n'
-	echo "$output" >> $file
+	echo "$output"
 }
 
 host_info () {
@@ -81,7 +78,7 @@ host_info () {
 	output+="$host_name, $domain_name"
 	output+=$'\n'
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 
 	csv_output+=$'\nhostname, domainname\n'
 	csv_output+="$host_name, $domain_name"$'\n'
@@ -116,7 +113,7 @@ user_info () {
 	done
 	output+=$header
 	output+=$'\n'
-	echo "$output" >> $file
+	echo "$output"
 }
 
 run_at_boot () {
@@ -126,7 +123,7 @@ run_at_boot () {
 	output+=$boot_programs
 	output+=$'\n'
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 
 	csv_output+=$'\nboot_programs\n'
 	csv_output+="$boot_programs"$'\n'
@@ -149,7 +146,7 @@ scheduled_tasks () {
 	output+=$crontabs
 	output+=$'\n'
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 network () {
@@ -234,17 +231,17 @@ network () {
 
 		output+=$'\n'
 	done <<< $(netstat -tunalp | grep 'ESTABLISHED' | tr -s " ")
-	echo "$output" >> $file
+	echo "$output"
 }
 
 software () {
 	local output=$header
 	output+=$'Installed Packages\n'
 	packages=$(apt list --installed | cut -d$'\n' -f2-)
-	output+=$packages
+	output+=$packages$'\n'
 	output+=$header
 	output+=$'\n'
-	echo "$output" >> $file
+	echo "$output"
 
 	csv_output+=$'\ninstalled_pckgs\n'
 	csv_output+="$packages"$'\n'
@@ -265,7 +262,7 @@ processes () {
 		output+=$'\n'
 		csv_output+="$proc_name, $pid, $ppid, $path, $owner"$'\n'
 	done <<< $ps_list
-	echo "$output" >> $file
+	echo "$output"
 }
 
 drivers () {
@@ -284,7 +281,7 @@ drivers () {
 
 	done <<< $driver_list
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 files () {
@@ -302,7 +299,7 @@ files () {
 		output+=$'\n'
 	done
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 sudo_users () {
@@ -313,7 +310,7 @@ sudo_users () {
 	output+=$'\n'
 	csv_output+=$(grep -Po '^sudo.+:\K.*$' /etc/group)$'\n'
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 active_users () {
@@ -331,7 +328,7 @@ active_users () {
 		csv_output+="$user_name, $tty, $shell"$'\n'
 	done <<< $user_line
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 bash_history () {
@@ -347,7 +344,7 @@ bash_history () {
 		csv_output+="$bash_history_out"$'\n'
 	done
 	output+=$header
-	echo "$output" >> $file
+	echo "$output"
 }
 
 run () {
@@ -393,9 +390,9 @@ if [ $remote ]; then
 	fi
 	$(ssh $ssh_user@$remote 'cat | bash /dev/stdin $csv -s' < $script)
 fi
-# if [ $csv ]; then
-# 	#exec 1> /dev/null
-# fi
+if [ $csv ]; then
+ 	exec 1> /dev/null
+fi
 run
 if [ $csv ]; then
 	echo "$csv_output" >> "output.csv"
