@@ -52,7 +52,6 @@ Function time_info {
 } 
 
 
-
 Function os_info {
     $OS_output = New-Object PSObject
 
@@ -68,8 +67,6 @@ Function os_info {
     Write-Host "OS INFORMATION: " 
     Write-host ($OS_output | Format-list |  Out-String)
 }
-
-
 
 
 Function hardware_info {
@@ -101,7 +98,6 @@ Function hardware_info {
 }
 
 
-
 Function dc_info {
     $domain_controllers = Get-ADDomainController -Filter * | Select Name, ipv4Address, OperatingSystem, site | Sort-Object -Property Name
     Write-Host $delimit
@@ -109,8 +105,6 @@ Function dc_info {
     Write-Host $domain_controllers
     $csv_obj | Add-Member -MemberType NoteProperty -Name DC -Value $domain_controllers
 }
-
-
 
 
 Function hostname_info {
@@ -124,8 +118,6 @@ Function hostname_info {
 }
 
 
-
-
 Function user_info {
     $user_info = gwmi win32_useraccount | Format-Table Name, SID 
     $user_info_csv = gwmi win32_useraccount | select Name, SID
@@ -136,8 +128,6 @@ Function user_info {
 
     Write-Host ($user_info | format-list | Out-String)
 }
-
-
 
 
 Function startup_info {
@@ -157,8 +147,6 @@ Function startup_info {
 }
 
 
-
-
 Function scheduled_info {
     $Tasks = Get-Scheduledtask | where {$_.State -eq 'Ready'} | Format-Table TaskName
 
@@ -171,96 +159,86 @@ Function scheduled_info {
 
 
 Function network_info {
-    $arptable = arp -a
-    $csv_obj | Add-Member -MemberType NoteProperty -Name arptable -Value $arptable
-
-    $macaddress = getmac 
-    $csv_obj | Add-Member -MemberType NoteProperty -Name macaddress -Value $macaddress
-
-    $route = Get-NetRoute
-    $csv_obj | Add-Member -MemberType NoteProperty -Name route -Value $route
-
-    $IP = Get-NetIPAddress | Format-Table IPAddress, InterfaceAlias
-    $IP_csv = Get-NetIPAddress | select IPAddress, InterfaceAlias
-    $csv_obj | Add-Member -MemberType NoteProperty -Name ip -Value $IP_csv
-
-    $dhcp = Get-WmiObject Win32_NetworkAdapterConfiguration | ? {$_.DHCPEnabled -eq $true -and $_.DHCPServer -ne $null} | select DHCPServer
-    $csv_obj | Add-Member -MemberType NoteProperty -Name dhcp -Value $dhcp
-
-    $dns_servers = Get-DnsClientServerAddress | Select-Object -ExpandProperty Serveraddresses
-    $dns_servers_csv = Get-DnsClientServerAddress
-    $csv_obj | Add-Member -MemberType NoteProperty -Name dnsservers -Value $dns_servers_csv
-
-    $gateway_IPv4 = Get-NetIPConfiguration | % IPv4defaultgateway | Format-List nexthop
-    $gateway_IPv4_csv = Get-NetIPConfiguration | % IPv4defaultgateway | select nexthop
-    $csv_obj | Add-Member -MemberType NoteProperty -Name gatewayipv4 -Value $gateway_IPv4_csv
-
-    $gateway_IPv6 = Get-NetIPConfiguration | % IPv46defaultgateway | Format-List nexthop
-    $csv_obj | Add-Member -MemberType NoteProperty -Name gatewayipv6 -Value $gateway_IPv6
-
-    $tcp_connections = Get-NetTCPConnection -State Listen | Format-Table State, localport, ElemenetName, LocalAddress, RemoteAddress
-    $tcp_connections_csv = Get-NetTCPConnection -State Listen | select State, localport, ElemenetName, LocalAddress, RemoteAddress
-    $csv_obj | Add-Member -MemberType NoteProperty -Name listeningports -Value $tcp_connections_csv
-
-    $all_tcp_connections = Get-NetTCPConnection | where {$_.State -ne "Listen"} | Format-Table creationtime,LocalPort,LocalAddress,remoteaddress,owningprocess, state
-    $csv_obj | Add-Member -MemberType NoteProperty -Name tcpconnections -Value $all_tcp_connections
-
-    $dns_cache = Get-DnsClientCache | Format-Table
-    $dns_cache_csv = Get-DnsClientCache
-    $csv_obj | Add-Member -MemberType NoteProperty -Name dnscache -Value $dns_cache_csv
-
-    $network_shares = get-smbshare
-    $csv_obj | Add-Member -MemberType NoteProperty -Name nwshares -Value $network_shares
-
-    $printers = Get-Printer
-    $csv_obj | Add-Member -MemberType NoteProperty -Name printers -Value $printers
-
-    $wifi = netsh.exe wlan show profiles 
-    $csv_obj | Add-Member -MemberType NoteProperty -Name wifi -Value $wifi
-
     Write-Host $delimit
     Write-Host "---Network Info---"
     Write-Host "" 
+
+    $arptable = arp -a
+    $csv_obj | Add-Member -MemberType NoteProperty -Name arptable -Value $arptable
     Write-Host "ARP table:" 
     Write-Host ($arptable | Format-List | Out-String)
 
+    $macaddress = getmac 
+    $csv_obj | Add-Member -MemberType NoteProperty -Name macaddress -Value $macaddress
     Write-Host "" 
     Write-Host "MAC Addrs:" 
     Write-host ($macaddress | Format-List | Out-String)
 
+    $route = Get-NetRoute
+    $csv_obj | Add-Member -MemberType NoteProperty -Name route -Value $route
     Write-Host "Routing table:" 
     Write-Host ($route | Out-String)
 
+    $IP = Get-NetIPAddress | Format-Table IPAddress, InterfaceAlias
+    $IP_csv = Get-NetIPAddress | select IPAddress, InterfaceAlias
+    $csv_obj | Add-Member -MemberType NoteProperty -Name ip -Value $IP_csv
     Write-Host "IP Addrs:"
     Write-Host ($IP | Format-List | Out-String)
 
+    $dhcp = Get-WmiObject Win32_NetworkAdapterConfiguration | ? {$_.DHCPEnabled -eq $true -and $_.DHCPServer -ne $null} | select DHCPServer
+    $csv_obj | Add-Member -MemberType NoteProperty -Name dhcp -Value $dhcp
     Write-Host ("DHCP Table:")
-    Write-Host ($dhcp | Format-Table | Out-String)  
+    Write-Host ($dhcp | Format-Table | Out-String)
 
+    $dns_servers = Get-DnsClientServerAddress | Select-Object -ExpandProperty Serveraddresses
+    $dns_servers_csv = Get-DnsClientServerAddress
+    $csv_obj | Add-Member -MemberType NoteProperty -Name dnsservers -Value $dns_servers_csv
     Write-Host "DNS Server addresses:"
     Write-Host ($dns_servers | Format-Table | Out-String)
 
+
+    $gateway_IPv4 = Get-NetIPConfiguration | % IPv4defaultgateway | Format-List nexthop
+    $gateway_IPv4_csv = Get-NetIPConfiguration | % IPv4defaultgateway | select nexthop
+    $csv_obj | Add-Member -MemberType NoteProperty -Name gatewayipv4 -Value $gateway_IPv4_csv
     Write-Host "IPv4 Gateway:"
     Write-Host ($gateway_IPv4 | Format-List | Out-String)
 
+    $gateway_IPv6 = Get-NetIPConfiguration | % IPv46defaultgateway | Format-List nexthop
+    $csv_obj | Add-Member -MemberType NoteProperty -Name gatewayipv6 -Value $gateway_IPv6
     Write-Host "IPv6 Gateway:"
     Write-Host ($gateway_IPv6 | Format-List | Out-String)
 
+    $tcp_connections = Get-NetTCPConnection -State Listen | Format-Table State, localport, ElemenetName, LocalAddress, RemoteAddress
+    $tcp_connections_csv = Get-NetTCPConnection -State Listen | select State, localport, ElemenetName, LocalAddress, RemoteAddress
+    $csv_obj | Add-Member -MemberType NoteProperty -Name listeningports -Value $tcp_connections_csv
     Write-Host "Listening services:"
     Write-Host ($tcp_connections | Format-List | Out-String)
 
+    $all_tcp_connections = Get-NetTCPConnection | where {$_.State -ne "Listen"} | Format-Table creationtime,LocalPort,LocalAddress,remoteaddress,owningprocess, state
+    $csv_obj | Add-Member -MemberType NoteProperty -Name tcpconnections -Value $all_tcp_connections
     Write-Host "Established connections:" 
     Write-Host ($all_tcp_connections | Out-String)
 
+    $dns_cache = Get-DnsClientCache | Format-Table
+    $dns_cache_csv = Get-DnsClientCache
+    $csv_obj | Add-Member -MemberType NoteProperty -Name dnscache -Value $dns_cache_csv
     Write-Host "DNS cache:" 
     Write-Host ($dns_cache | Out-String)
 
+    $network_shares = get-smbshare
+    $csv_obj | Add-Member -MemberType NoteProperty -Name nwshares -Value $network_shares
     Write-Host "Network Shares:" 
     Write-Host ($network_shares | Out-String)
 
+
+    $printers = Get-Printer
+    $csv_obj | Add-Member -MemberType NoteProperty -Name printers -Value $printers
     Write-Host "Printers:"
     Write-Host ($printers | Out-String)  
 
+
+    $wifi = netsh.exe wlan show profiles 
+    $csv_obj | Add-Member -MemberType NoteProperty -Name wifi -Value $wifi
     Write-Host "Wifi Profiles:" 
     Write-Host ($wifi | Format-List | Out-String) 
 }
@@ -275,8 +253,6 @@ Function program_info {
 
     $csv_obj | Add-Member -MemberType NoteProperty -Name prog -Value $installed_programs
 }
-
-
 
 
 Function process_info {
@@ -357,8 +333,6 @@ Function driver_info {
 
     $csv_obj | Add-Member -MemberType NoteProperty -Name driver -Value $drivers
 }
-
-
 
 
 Function file_info {
